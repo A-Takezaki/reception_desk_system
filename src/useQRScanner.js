@@ -49,6 +49,29 @@ export function useQRScanner() {
     var _a = useState({ status: 'idle' }), scannerState = _a[0], setScannerState = _a[1];
     var qrScannerRef = useRef(null);
     var videoElementRef = useRef(null);
+    var cooldownTimerRef = useRef(null);
+    var isInCooldownRef = useRef(false);
+    /**
+     * クールダウンを開始する関数
+     */
+    var startCooldown = useCallback(function () {
+        var COOLDOWN_SECONDS = 10;
+        var remainingSeconds = COOLDOWN_SECONDS;
+        setScannerState({ status: 'cooldown', remainingSeconds: remainingSeconds });
+        var countdown = function () {
+            remainingSeconds--;
+            if (remainingSeconds > 0) {
+                setScannerState({ status: 'cooldown', remainingSeconds: remainingSeconds });
+                cooldownTimerRef.current = setTimeout(countdown, 1000);
+            }
+            else {
+                // クールダウン終了
+                isInCooldownRef.current = false;
+                setScannerState({ status: 'scanning' });
+            }
+        };
+        cooldownTimerRef.current = setTimeout(countdown, 1000);
+    }, []);
     /**
      * QRコード検出時のコールバック関数
      */
@@ -57,7 +80,13 @@ export function useQRScanner() {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 3, , 4]);
+                    // クールダウン中は処理をスキップ
+                    if (isInCooldownRef.current) {
+                        return [2 /*return*/];
+                    }
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 4, , 5]);
                     visitorInfo = parseQRCodeData(result.data);
                     if (!visitorInfo) {
                         setScannerState({
@@ -67,9 +96,9 @@ export function useQRScanner() {
                         return [2 /*return*/];
                     }
                     timestamp = new Date();
-                    if (!videoElementRef.current) return [3 /*break*/, 2];
+                    if (!videoElementRef.current) return [3 /*break*/, 3];
                     return [4 /*yield*/, captureImageFromVideo(videoElementRef.current)];
-                case 1:
+                case 2:
                     imageBlob = _a.sent();
                     if (imageBlob) {
                         imageFilename = "visitor_".concat(visitorInfo.id, "_").concat(timestamp.getTime(), ".jpg");
@@ -78,8 +107,8 @@ export function useQRScanner() {
                             console.error('画像保存エラー:', saveImageResult.error);
                         }
                     }
-                    _a.label = 2;
-                case 2:
+                    _a.label = 3;
+                case 3:
                     saveDataResult = saveVisitorDataToLocal(visitorInfo, timestamp);
                     if (!saveDataResult.ok) {
                         console.error('データ保存エラー:', saveDataResult.error);
@@ -89,19 +118,21 @@ export function useQRScanner() {
                         visitor: visitorInfo,
                         timestamp: timestamp
                     });
-                    // 5秒後に状態をリセット
+                    // クールダウン開始
+                    isInCooldownRef.current = true;
+                    // 5秒後に成功状態からクールダウン状態に移行
                     setTimeout(function () {
-                        setScannerState({ status: 'scanning' });
+                        startCooldown();
                     }, 5000);
-                    return [3 /*break*/, 4];
-                case 3:
+                    return [3 /*break*/, 5];
+                case 4:
                     error_1 = _a.sent();
                     setScannerState({
                         status: 'error',
                         error: error_1 instanceof Error ? error_1.message : 'QRコード処理中にエラーが発生しました'
                     });
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
+                    return [3 /*break*/, 5];
+                case 5: return [2 /*return*/];
             }
         });
     }); }, []);
@@ -148,7 +179,12 @@ export function useQRScanner() {
             qrScannerRef.current.destroy();
             qrScannerRef.current = null;
         }
+        if (cooldownTimerRef.current) {
+            clearTimeout(cooldownTimerRef.current);
+            cooldownTimerRef.current = null;
+        }
         videoElementRef.current = null;
+        isInCooldownRef.current = false;
         setScannerState({ status: 'idle' });
     }, []);
     /**
@@ -164,6 +200,9 @@ export function useQRScanner() {
         return function () {
             if (qrScannerRef.current) {
                 qrScannerRef.current.destroy();
+            }
+            if (cooldownTimerRef.current) {
+                clearTimeout(cooldownTimerRef.current);
             }
         };
     }, []);
@@ -203,6 +242,16 @@ if (import.meta.vitest) {
         expect_1(errorState.status).toBe('error');
         if (errorState.status === 'error') {
             expect_1(errorState.error).toBe('テストエラー');
+        }
+    });
+    test('useQRScanner - cooldown状態のデータ構造', function () {
+        var cooldownState = {
+            status: 'cooldown',
+            remainingSeconds: 8
+        };
+        expect_1(cooldownState.status).toBe('cooldown');
+        if (cooldownState.status === 'cooldown') {
+            expect_1(cooldownState.remainingSeconds).toBe(8);
         }
     });
 }

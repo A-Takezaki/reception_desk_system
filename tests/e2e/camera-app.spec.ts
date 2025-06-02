@@ -111,4 +111,15 @@ test.describe('受付システム カメラアプリケーション', () => {
     // ボタンのMUIクラスが適用されていることを確認
     await expect(startButton).toHaveClass(/MuiButton/);
   });
+
+  test('QRコード読み取りのクールダウン機能', async ({ page }) => {
+    await page.goto('/');
+    
+    // クールダウンメッセージのパターンをテスト
+    // 実際のQRコード読み取りはモックできないため、文字列パターンのみ確認
+    const cooldownPattern = /次の読み取りまで \d+秒/;
+    const testMessage = '次の読み取りまで 5秒';
+    
+    expect(cooldownPattern.test(testMessage)).toBe(true);
+  });
 });

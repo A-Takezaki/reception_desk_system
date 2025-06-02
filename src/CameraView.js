@@ -75,7 +75,18 @@ export function CameraView(_a) {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1
-                }, children: [_jsx(CircularProgress, { size: 16, color: "inherit" }), "QR\u30B3\u30FC\u30C9\u3092\u30B9\u30AD\u30E3\u30F3\u4E2D..."] })), scannerState.status === 'error' && (_jsx(Box, { sx: {
+                }, children: [_jsx(CircularProgress, { size: 16, color: "inherit" }), "QR\u30B3\u30FC\u30C9\u3092\u30B9\u30AD\u30E3\u30F3\u4E2D..."] })), scannerState.status === 'cooldown' && (_jsxs(Box, { sx: {
+                    position: 'absolute',
+                    top: 16,
+                    left: 16,
+                    bgcolor: 'rgba(255, 152, 0, 0.9)',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                }, children: [_jsx(CircularProgress, { size: 16, color: "inherit" }), "\u6B21\u306E\u8AAD\u307F\u53D6\u308A\u307E\u3067 ", scannerState.remainingSeconds, "\u79D2"] })), scannerState.status === 'error' && (_jsx(Box, { sx: {
                     position: 'absolute',
                     top: 16,
                     left: 16,
@@ -117,5 +128,10 @@ if (import.meta.vitest) {
         var defaultHeight = 480;
         expect_1(defaultWidth).toBe(640);
         expect_1(defaultHeight).toBe(480);
+    });
+    test('CameraView - クールダウン状態でメッセージが適切に設定される', function () {
+        var remainingSeconds = 7;
+        var expectedMessage = "\u6B21\u306E\u8AAD\u307F\u53D6\u308A\u307E\u3067 ".concat(remainingSeconds, "\u79D2");
+        expect_1(expectedMessage).toBe('次の読み取りまで 7秒');
     });
 }

@@ -15,6 +15,7 @@ export type QRScannerState =
   | { status: 'idle' }
   | { status: 'scanning' }
   | { status: 'success'; visitor: VisitorInfo; timestamp: Date }
+  | { status: 'cooldown'; remainingSeconds: number }
   | { status: 'error'; error: string };
 
 /**
@@ -24,11 +25,42 @@ export function useQRScanner() {
   const [scannerState, setScannerState] = useState<QRScannerState>({ status: 'idle' });
   const qrScannerRef = useRef<QrScanner | null>(null);
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
+  const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isInCooldownRef = useRef<boolean>(false);
+
+  /**
+   * クールダウンを開始する関数
+   */
+  const startCooldown = useCallback(() => {
+    const COOLDOWN_SECONDS = 10;
+    let remainingSeconds = COOLDOWN_SECONDS;
+
+    setScannerState({ status: 'cooldown', remainingSeconds });
+
+    const countdown = () => {
+      remainingSeconds--;
+      if (remainingSeconds > 0) {
+        setScannerState({ status: 'cooldown', remainingSeconds });
+        cooldownTimerRef.current = setTimeout(countdown, 1000);
+      } else {
+        // クールダウン終了
+        isInCooldownRef.current = false;
+        setScannerState({ status: 'scanning' });
+      }
+    };
+
+    cooldownTimerRef.current = setTimeout(countdown, 1000);
+  }, []);
 
   /**
    * QRコード検出時のコールバック関数
    */
   const handleQRCodeDetected = useCallback(async (result: QrScanner.ScanResult) => {
+    // クールダウン中は処理をスキップ
+    if (isInCooldownRef.current) {
+      return;
+    }
+
     try {
       const visitorInfo = parseQRCodeData(result.data);
       
@@ -67,9 +99,12 @@ export function useQRScanner() {
         timestamp
       });
 
-      // 5秒後に状態をリセット
+      // クールダウン開始
+      isInCooldownRef.current = true;
+
+      // 5秒後に成功状態からクールダウン状態に移行
       setTimeout(() => {
-        setScannerState({ status: 'scanning' });
+        startCooldown();
       }, 5000);
 
     } catch (error) {
@@ -121,7 +156,12 @@ export function useQRScanner() {
       qrScannerRef.current.destroy();
       qrScannerRef.current = null;
     }
+    if (cooldownTimerRef.current) {
+      clearTimeout(cooldownTimerRef.current);
+      cooldownTimerRef.current = null;
+    }
     videoElementRef.current = null;
+    isInCooldownRef.current = false;
     setScannerState({ status: 'idle' });
   }, []);
 
@@ -139,6 +179,9 @@ export function useQRScanner() {
     return () => {
       if (qrScannerRef.current) {
         qrScannerRef.current.destroy();
+      }
+      if (cooldownTimerRef.current) {
+        clearTimeout(cooldownTimerRef.current);
       }
     };
   }, []);
@@ -185,6 +228,18 @@ if (import.meta.vitest) {
     expect(errorState.status).toBe('error');
     if (errorState.status === 'error') {
       expect(errorState.error).toBe('テストエラー');
+    }
+  });
+
+  test('useQRScanner - cooldown状態のデータ構造', () => {
+    const cooldownState: QRScannerState = { 
+      status: 'cooldown', 
+      remainingSeconds: 8 
+    };
+    
+    expect(cooldownState.status).toBe('cooldown');
+    if (cooldownState.status === 'cooldown') {
+      expect(cooldownState.remainingSeconds).toBe(8);
     }
   });
 }

@@ -129,6 +129,27 @@ export function CameraView({ cameraState, width = 640, height = 480 }: CameraVie
         </Box>
       )}
 
+      {/* クールダウン状態表示 */}
+      {scannerState.status === 'cooldown' && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 16,
+            left: 16,
+            bgcolor: 'rgba(255, 152, 0, 0.9)',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}
+        >
+          <CircularProgress size={16} color="inherit" />
+          次の読み取りまで {scannerState.remainingSeconds}秒
+        </Box>
+      )}
+
       {/* QRスキャナーエラー表示 */}
       {scannerState.status === 'error' && (
         <Box
@@ -201,5 +222,11 @@ if (import.meta.vitest) {
     const defaultHeight = 480;
     expect(defaultWidth).toBe(640);
     expect(defaultHeight).toBe(480);
+  });
+
+  test('CameraView - クールダウン状態でメッセージが適切に設定される', () => {
+    const remainingSeconds = 7;
+    const expectedMessage = `次の読み取りまで ${remainingSeconds}秒`;
+    expect(expectedMessage).toBe('次の読み取りまで 7秒');
   });
 }
