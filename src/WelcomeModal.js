@@ -52,32 +52,19 @@ export function WelcomeModal(_a) {
                     }, children: _jsx(CheckCircleIcon, { sx: {
                             fontSize: 48,
                             color: theme.palette.success.light
-                        } }) }), _jsxs(Box, { sx: { textAlign: 'center' }, children: [_jsx(Typography, { variant: "h4", component: "h1", sx: {
+                        } }) }), _jsxs(Box, { sx: { textAlign: 'center', mb: 2 }, children: [_jsxs(Typography, { variant: "h3", component: "h1", sx: {
                                 fontWeight: 'bold',
-                                marginBottom: theme.spacing(1),
                                 textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                            }, children: "\u3088\u3046\u3053\u305D\uFF01" }), _jsxs(Typography, { variant: "h5", component: "h2", sx: {
-                                marginBottom: theme.spacing(2),
-                                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                            }, children: [visitor.name, "\u3055\u3093\u3001"] }), _jsx(Typography, { variant: "h6", component: "p", sx: {
-                                fontWeight: 'normal',
-                                opacity: 0.9,
-                                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                            }, children: "\u3054\u6765\u5834\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\u3002" })] }), _jsxs(Box, { sx: {
-                        bgcolor: 'rgba(255, 255, 255, 0.15)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        padding: theme.spacing(2, 3),
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                    }, children: [_jsx(Typography, { variant: "body2", sx: {
-                                opacity: 0.8,
-                                marginBottom: theme.spacing(0.5),
-                            }, children: "\u6765\u5834\u8005ID" }), _jsx(Typography, { variant: "h6", sx: {
-                                fontFamily: 'monospace',
+                                lineHeight: 1.2,
+                                mb: 1
+                            }, children: [visitor.name, "\u3055\u3093\u3001"] }), _jsx(Typography, { variant: "h4", component: "h2", sx: {
                                 fontWeight: 'bold',
-                            }, children: visitor.id })] }), _jsx(Typography, { variant: "caption", sx: {
-                        opacity: 0.7,
-                        marginTop: theme.spacing(1),
+                                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                lineHeight: 1.3
+                            }, children: "\u3054\u6765\u5834\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\u3002" })] }), _jsx(Typography, { variant: "body2", sx: {
+                        opacity: 0.8,
+                        marginTop: theme.spacing(2),
+                        textAlign: 'center'
                     }, children: "\u3053\u306E\u30E1\u30C3\u30BB\u30FC\u30B8\u306F5\u79D2\u5F8C\u306B\u81EA\u52D5\u7684\u306B\u9589\u3058\u307E\u3059" })] }) }));
 }
 if (import.meta.vitest) {
@@ -105,6 +92,7 @@ if (import.meta.vitest) {
         expect_1((_b = props.visitor) === null || _b === void 0 ? void 0 : _b.id).toBe('12345');
     });
     test('WelcomeModal - propsが適切に設定される', function () {
+        var _a;
         var mockOnClose = function () { };
         var visitor = { name: 'テスト太郎', id: '99999' };
         var props = {
@@ -114,5 +102,13 @@ if (import.meta.vitest) {
         };
         expect_1(props.open).toBe(true);
         expect_1(props.onClose).toBe(mockOnClose);
+        expect_1((_a = props.visitor) === null || _a === void 0 ? void 0 : _a.name).toBe('テスト太郎');
+    });
+    test('WelcomeModal - メッセージが正しい形式で表示される', function () {
+        var visitor = { name: '山田花子', id: '54321' };
+        var expectedMainMessage = "".concat(visitor.name, "\u3055\u3093\u3001");
+        var expectedSubMessage = 'ご来場ありがとうございます。';
+        expect_1(expectedMainMessage).toBe('山田花子さん、');
+        expect_1(expectedSubMessage).toBe('ご来場ありがとうございます。');
     });
 }
