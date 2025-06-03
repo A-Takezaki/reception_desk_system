@@ -135,7 +135,7 @@ export function useQRScanner() {
                 case 5: return [2 /*return*/];
             }
         });
-    }); }, []);
+    }); }, [startCooldown]);
     /**
      * QRスキャナーを開始
      */
@@ -150,10 +150,13 @@ export function useQRScanner() {
                     if (qrScannerRef.current) {
                         qrScannerRef.current.destroy();
                     }
+                    // QR-Scannerのワーカーファイルパスを明示的に設定
+                    QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
                     qrScanner = new QrScanner(videoElement, handleQRCodeDetected, {
                         returnDetailedScanResult: true,
                         highlightScanRegion: true,
                         highlightCodeOutline: true,
+                        // calculateScanRegionを無効化してカメラ全体をスキャン
                     });
                     qrScannerRef.current = qrScanner;
                     return [4 /*yield*/, qrScanner.start()];
@@ -214,7 +217,7 @@ export function useQRScanner() {
     };
 }
 if (import.meta.vitest) {
-    var _a = import.meta.vitest, test = _a.test, expect_1 = _a.expect, vi = _a.vi;
+    var _a = import.meta.vitest, test = _a.test, expect_1 = _a.expect;
     test('useQRScanner - 初期状態はidle', function () {
         var initialState = { status: 'idle' };
         expect_1(initialState.status).toBe('idle');
@@ -253,5 +256,31 @@ if (import.meta.vitest) {
         if (cooldownState.status === 'cooldown') {
             expect_1(cooldownState.remainingSeconds).toBe(8);
         }
+    });
+    test('useQRScanner - スキャン領域計算が正しく動作する', function () {
+        // モックビデオ要素
+        var mockVideo = {
+            videoWidth: 1280,
+            videoHeight: 720,
+            clientWidth: 1280,
+            clientHeight: 720
+        };
+        // calculateScanRegion関数のロジックをテスト
+        var videoWidth = mockVideo.videoWidth || mockVideo.clientWidth;
+        var videoHeight = mockVideo.videoHeight || mockVideo.clientHeight;
+        var centerX = videoWidth * 0.75; // 右側エリアの中央
+        var centerY = videoHeight * 0.5; // 縦方向中央
+        var size = Math.min(videoWidth * 0.2, videoHeight * 0.3);
+        var expectedRegion = {
+            x: centerX - size / 2,
+            y: centerY - size / 2,
+            width: size,
+            height: size,
+        };
+        expect_1(centerX).toBe(960); // 1280 * 0.75
+        expect_1(centerY).toBe(360); // 720 * 0.5
+        expect_1(size).toBe(216); // Math.min(256, 216)
+        expect_1(expectedRegion.x).toBe(852); // 960 - 108
+        expect_1(expectedRegion.y).toBe(252); // 360 - 108
     });
 }

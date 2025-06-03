@@ -56,7 +56,7 @@ export function WelcomeModal({ open, visitor, onClose }: WelcomeModalProps) {
         sx: {
           borderRadius: 3,
           boxShadow: theme.shadows[10],
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'linear-gradient(135deg, #5F161D 0%, #8B4249 30%, #E8B4B8 100%)',
           color: 'white',
           textAlign: 'center'
         }

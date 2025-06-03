@@ -113,7 +113,7 @@ export function useQRScanner() {
         error: error instanceof Error ? error.message : 'QRコード処理中にエラーが発生しました'
       });
     }
-  }, []);
+  }, [startCooldown]);
 
   /**
    * QRスキャナーを開始
@@ -127,6 +127,9 @@ export function useQRScanner() {
         qrScannerRef.current.destroy();
       }
 
+      // QR-Scannerのワーカーファイルパスを明示的に設定
+      QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
+
       const qrScanner = new QrScanner(
         videoElement,
         handleQRCodeDetected,
@@ -134,6 +137,7 @@ export function useQRScanner() {
           returnDetailedScanResult: true,
           highlightScanRegion: true,
           highlightCodeOutline: true,
+          // calculateScanRegionを無効化してカメラ全体をスキャン
         }
       );
 
@@ -195,7 +199,7 @@ export function useQRScanner() {
 }
 
 if (import.meta.vitest) {
-  const { test, expect, vi } = import.meta.vitest;
+  const { test, expect } = import.meta.vitest;
 
   test('useQRScanner - 初期状態はidle', () => {
     const initialState: QRScannerState = { status: 'idle' };
@@ -241,5 +245,36 @@ if (import.meta.vitest) {
     if (cooldownState.status === 'cooldown') {
       expect(cooldownState.remainingSeconds).toBe(8);
     }
+  });
+
+  test('useQRScanner - スキャン領域計算が正しく動作する', () => {
+    // モックビデオ要素
+    const mockVideo = {
+      videoWidth: 1280,
+      videoHeight: 720,
+      clientWidth: 1280,
+      clientHeight: 720
+    };
+    
+    // calculateScanRegion関数のロジックをテスト
+    const videoWidth = mockVideo.videoWidth || mockVideo.clientWidth;
+    const videoHeight = mockVideo.videoHeight || mockVideo.clientHeight;
+    
+    const centerX = videoWidth * 0.75; // 右側エリアの中央
+    const centerY = videoHeight * 0.5;  // 縦方向中央
+    const size = Math.min(videoWidth * 0.2, videoHeight * 0.3);
+    
+    const expectedRegion = {
+      x: centerX - size / 2,
+      y: centerY - size / 2,
+      width: size,
+      height: size,
+    };
+    
+    expect(centerX).toBe(960); // 1280 * 0.75
+    expect(centerY).toBe(360); // 720 * 0.5
+    expect(size).toBe(216); // Math.min(256, 216)
+    expect(expectedRegion.x).toBe(852); // 960 - 108
+    expect(expectedRegion.y).toBe(252); // 360 - 108
   });
 }

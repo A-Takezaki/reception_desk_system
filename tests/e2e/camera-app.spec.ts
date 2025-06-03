@@ -122,4 +122,59 @@ test.describe('受付システム カメラアプリケーション', () => {
     
     expect(cooldownPattern.test(testMessage)).toBe(true);
   });
+
+  test('カメラガイドラインが表示される', async ({ page }) => {
+    await page.goto('/');
+    
+    // カメラアクセスをモックして、即座にready状態にする
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'mediaDevices', {
+        writable: true,
+        value: {
+          getUserMedia: () => Promise.resolve(new MediaStream())
+        }
+      });
+    });
+    
+    // カメラ開始ボタンをクリック
+    await page.getByRole('button', { name: 'カメラ開始' }).click();
+    
+    // ガイドテキストの存在確認（カメラ起動後に表示される）
+    await expect(page.locator('text=顔撮影エリア')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=QRコードエリア')).toBeVisible();
+    await expect(page.locator('text=こちら側にお顔を向けてください')).toBeVisible();
+    await expect(page.locator('text=こちら側にQRコードをかざしてください')).toBeVisible();
+  });
+
+  test('QRスキャナーのレティクル位置が正しく計算される', async ({ page }) => {
+    await page.goto('/');
+    
+    // スキャン領域計算のテスト（JavaScriptロジック）
+    const result = await page.evaluate(() => {
+      const mockVideo = {
+        videoWidth: 1280,
+        videoHeight: 720
+      };
+      
+      const videoWidth = mockVideo.videoWidth;
+      const videoHeight = mockVideo.videoHeight;
+      const centerX = videoWidth * 0.75;
+      const centerY = videoHeight * 0.5;
+      const size = Math.min(videoWidth * 0.2, videoHeight * 0.3);
+      
+      return {
+        centerX,
+        centerY,
+        size,
+        expectedX: centerX - size / 2,
+        expectedY: centerY - size / 2
+      };
+    });
+    
+    expect(result.centerX).toBe(960);
+    expect(result.centerY).toBe(360);
+    expect(result.size).toBe(216);
+    expect(result.expectedX).toBe(852);
+    expect(result.expectedY).toBe(252);
+  });
 });

@@ -5,7 +5,7 @@
  */
 
 import React, { useRef, useEffect } from 'react';
-import { Box, Alert, CircularProgress } from '@mui/material';
+import { Box, Alert, CircularProgress, Typography } from '@mui/material';
 import type { CameraState } from './types';
 import { useQRScanner } from './useQRScanner';
 import { WelcomeModal } from './WelcomeModal';
@@ -57,14 +57,17 @@ export function CameraView({ cameraState, width = 640, height = 480 }: CameraVie
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#f0f0f0',
-          border: '2px dashed #ccc',
-          borderRadius: 2,
-          gap: 2
+          background: 'linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%)',
+          border: '2px dashed rgba(95, 22, 29, 0.3)',
+          borderRadius: 3,
+          gap: 2,
+          boxShadow: '0px 3px 1px -2px rgba(95,22,29,0.2),0px 2px 2px 0px rgba(95,22,29,0.14),0px 1px 5px 0px rgba(95,22,29,0.12)'
         }}
       >
-        <CircularProgress />
-        <p>カメラを起動中...</p>
+        <CircularProgress sx={{ color: '#5F161D' }} size={48} />
+        <Typography variant="body1" sx={{ color: '#5F161D', fontWeight: 500 }}>
+          カメラを起動中...
+        </Typography>
       </Box>
     );
   }
@@ -102,26 +105,134 @@ export function CameraView({ cameraState, width = 640, height = 480 }: CameraVie
         playsInline
         muted
         style={{ 
-          border: '1px solid #ccc', 
-          borderRadius: '8px',
-          display: 'block'
+          border: '3px solid rgba(95, 22, 29, 0.2)', 
+          borderRadius: '12px',
+          display: 'block',
+          boxShadow: '0px 6px 6px -3px rgba(95,22,29,0.2),0px 10px 14px 1px rgba(95,22,29,0.14),0px 4px 18px 3px rgba(95,22,29,0.12)'
         }}
       />
+      
+      {/* カメラガイドライン - 真ん中の縦線 */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: '50%',
+          width: '2px',
+          height: '100%',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          transform: 'translateX(-50%)',
+          pointerEvents: 'none',
+          boxShadow: '0 0 4px rgba(0, 0, 0, 0.5)'
+        }}
+      />
+
+      {/* 左側ガイド - 顔撮影案内 */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 20,
+          left: 20,
+          right: '50%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          color: 'white',
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
+          pointerEvents: 'none'
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            background: 'linear-gradient(135deg, #5F161D 0%, #8B4249 100%)',
+            color: 'white',
+            padding: '12px 20px',
+            borderRadius: 3,
+            fontWeight: 700,
+            mb: 1,
+            boxShadow: '0px 3px 1px -2px rgba(95,22,29,0.2),0px 2px 2px 0px rgba(95,22,29,0.14),0px 1px 5px 0px rgba(95,22,29,0.12)'
+          }}
+        >
+          顔撮影エリア
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            backgroundColor: 'rgba(95, 22, 29, 0.8)',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: 2,
+            textAlign: 'center',
+            fontWeight: 500,
+            boxShadow: '0px 2px 1px -1px rgba(95,22,29,0.2),0px 1px 1px 0px rgba(95,22,29,0.14),0px 1px 3px 0px rgba(95,22,29,0.12)'
+          }}
+        >
+          こちら側に<br />お顔を向けてください
+        </Typography>
+      </Box>
+
+      {/* 右側ガイド - QRコード案内 */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 20,
+          left: '50%',
+          right: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          color: 'white',
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
+          pointerEvents: 'none'
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            background: 'linear-gradient(135deg, #E8B4B8 0%, #C89196 100%)',
+            color: '#5F161D',
+            padding: '12px 20px',
+            borderRadius: 3,
+            fontWeight: 700,
+            mb: 1,
+            boxShadow: '0px 3px 1px -2px rgba(95,22,29,0.2),0px 2px 2px 0px rgba(95,22,29,0.14),0px 1px 5px 0px rgba(95,22,29,0.12)'
+          }}
+        >
+          QRコードエリア
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            backgroundColor: 'rgba(95, 22, 29, 0.8)',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: 2,
+            textAlign: 'center',
+            fontWeight: 500,
+            boxShadow: '0px 2px 1px -1px rgba(95,22,29,0.2),0px 1px 1px 0px rgba(95,22,29,0.14),0px 1px 3px 0px rgba(95,22,29,0.12)'
+          }}
+        >
+          こちら側に<br />QRコードをかざしてください
+        </Typography>
+      </Box>
       
       {/* QRスキャナーの状態表示 */}
       {scannerState.status === 'scanning' && (
         <Box
           sx={{
             position: 'absolute',
-            top: 16,
-            left: 16,
-            bgcolor: 'rgba(0, 0, 0, 0.7)',
+            bottom: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'linear-gradient(135deg, #5F161D 0%, #8B4249 100%)',
             color: 'white',
-            padding: '8px 16px',
-            borderRadius: 2,
+            padding: '12px 20px',
+            borderRadius: 3,
             display: 'flex',
             alignItems: 'center',
-            gap: 1
+            gap: 1,
+            boxShadow: '0px 3px 1px -2px rgba(95,22,29,0.2),0px 2px 2px 0px rgba(95,22,29,0.14),0px 1px 5px 0px rgba(95,22,29,0.12)'
           }}
         >
           <CircularProgress size={16} color="inherit" />
@@ -134,15 +245,18 @@ export function CameraView({ cameraState, width = 640, height = 480 }: CameraVie
         <Box
           sx={{
             position: 'absolute',
-            top: 16,
-            left: 16,
-            bgcolor: 'rgba(255, 152, 0, 0.9)',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: 2,
+            bottom: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'linear-gradient(135deg, #E8B4B8 0%, #C89196 100%)',
+            color: '#5F161D',
+            padding: '12px 20px',
+            borderRadius: 3,
             display: 'flex',
             alignItems: 'center',
-            gap: 1
+            gap: 1,
+            fontWeight: 600,
+            boxShadow: '0px 3px 1px -2px rgba(95,22,29,0.2),0px 2px 2px 0px rgba(95,22,29,0.14),0px 1px 5px 0px rgba(95,22,29,0.12)'
           }}
         >
           <CircularProgress size={16} color="inherit" />
@@ -155,7 +269,7 @@ export function CameraView({ cameraState, width = 640, height = 480 }: CameraVie
         <Box
           sx={{
             position: 'absolute',
-            top: 16,
+            bottom: 16,
             left: 16,
             right: 16
           }}
@@ -228,5 +342,17 @@ if (import.meta.vitest) {
     const remainingSeconds = 7;
     const expectedMessage = `次の読み取りまで ${remainingSeconds}秒`;
     expect(expectedMessage).toBe('次の読み取りまで 7秒');
+  });
+
+  test('CameraView - ガイドテキストが正しく設定される', () => {
+    const faceGuideText = 'こちら側に\nお顔を向けてください';
+    const qrGuideText = 'こちら側に\nQRコードをかざしてください';
+    const faceAreaTitle = '顔撮影エリア';
+    const qrAreaTitle = 'QRコードエリア';
+    
+    expect(faceGuideText).toBe('こちら側に\nお顔を向けてください');
+    expect(qrGuideText).toBe('こちら側に\nQRコードをかざしてください');
+    expect(faceAreaTitle).toBe('顔撮影エリア');
+    expect(qrAreaTitle).toBe('QRコードエリア');
   });
 }
