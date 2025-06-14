@@ -4,4 +4,5 @@ npm test ----run                                                                
 
 npx tsc --noEmit
 npm run build
-npm run test:e2e   
+npm run test:e2e
+npm run dev
