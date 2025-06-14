@@ -7,6 +7,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import QrScanner from 'qr-scanner';
 import type { QRScanResult, VisitorInfo } from './types';
 import { parseQRCodeData, captureImageFromVideo, saveImageToLocal, saveVisitorDataToLocal } from './storageUtils';
+import { updateAttendanceStatus } from './notionUtils';
 
 /**
  * QRスキャナーの状態を表す型
@@ -93,6 +94,12 @@ export function useQRScanner() {
         console.error('データ保存エラー:', saveDataResult.error);
       }
 
+      // Notion データベースの出席状況を更新
+      const notionResult = await updateAttendanceStatus(visitorInfo);
+      if (!notionResult.success) {
+        console.error('Notion更新エラー:', notionResult.error);
+      }
+
       setScannerState({
         status: 'success',
         visitor: visitorInfo,
@@ -128,7 +135,10 @@ export function useQRScanner() {
       }
 
       // QR-Scannerのワーカーファイルパスを明示的に設定
-      QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
+      // @ts-ignore - QrScannerの型定義にcreateWorkerが含まれていない
+      QrScanner.createWorker = () => {
+        return new Worker('/qr-scanner-worker.min.js');
+      };
 
       const qrScanner = new QrScanner(
         videoElement,
@@ -137,7 +147,7 @@ export function useQRScanner() {
           returnDetailedScanResult: true,
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          // calculateScanRegionを無効化してカメラ全体をスキャン
+          maxScansPerSecond: 5,
         }
       );
 
