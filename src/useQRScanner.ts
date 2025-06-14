@@ -7,7 +7,6 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import QrScanner from 'qr-scanner';
 import type { QRScanResult, VisitorInfo } from './types';
 import { parseQRCodeData, captureImageFromVideo, saveImageToLocal, saveVisitorDataToLocal } from './storageUtils';
-import { updateAttendanceStatus } from './notionUtils';
 
 /**
  * QRスキャナーの状態を表す型
@@ -94,12 +93,6 @@ export function useQRScanner() {
         console.error('データ保存エラー:', saveDataResult.error);
       }
 
-      // Notion データベースの出席状況を更新
-      const notionResult = await updateAttendanceStatus(visitorInfo);
-      if (!notionResult.success) {
-        console.error('Notion更新エラー:', notionResult.error);
-      }
-
       setScannerState({
         status: 'success',
         visitor: visitorInfo,
@@ -135,10 +128,7 @@ export function useQRScanner() {
       }
 
       // QR-Scannerのワーカーファイルパスを明示的に設定
-      // @ts-ignore - QrScannerの型定義にcreateWorkerが含まれていない
-      QrScanner.createWorker = () => {
-        return new Worker('/qr-scanner-worker.min.js');
-      };
+      QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
 
       const qrScanner = new QrScanner(
         videoElement,
@@ -147,7 +137,24 @@ export function useQRScanner() {
           returnDetailedScanResult: true,
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          maxScansPerSecond: 5,
+          // calculateScanRegionを無効化してカメラ全体をスキャン
+          calculateScanRegion: () => {
+            const videoWidth = videoElement.videoWidth || videoElement.clientWidth;
+            const videoHeight = videoElement.videoHeight || videoElement.clientHeight;
+
+            // 右側のエリアをスキャン
+            const centerX = videoWidth * 0.75; // 右側エリアの中央
+            const centerY = videoHeight * 0.5;  // 縦方向中央
+            const size = Math.min(videoWidth * 0.5, videoHeight * 0.5); // スキャンサイズ
+
+            return {
+              x: centerX - size / 2,
+              y: centerY - size / 2,
+              width: size,
+              height: size,
+            };
+          }
+
         }
       );
 
